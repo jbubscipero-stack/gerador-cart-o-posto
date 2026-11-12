@@ -56,19 +56,21 @@ body[data-paper="a6"] .sheet{zoom:.9}
 .card th,.card td{border:.3mm solid #000;height:.6cm;text-align:center;font-size:9pt;padding:0;font-weight:400}
 .card td:nth-child(1){width:24%;font-style:italic}.card td:nth-child(2){width:24%}
 .ecgsheet{zoom:.42;width:max-content}
-.ecgpg{width:29.7cm;height:20.9cm;background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;overflow:hidden;box-shadow:0 0 0 1px var(--line)}
-.ecgc{margin-left:16.4cm;width:12.8cm;padding-top:1.9cm;text-align:center}
-.ecgc img{height:2.1cm;display:block;margin:0 auto .5cm}
-.ecgc .e1{font-size:16pt}.ecgc .e2{font-weight:700;font-size:14pt}.ecgc .e3{font-size:11pt;line-height:1.35}
+.ecgpg{position:relative;width:29.7cm;height:20.9cm;background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;overflow:hidden;box-shadow:0 0 0 1px var(--line)}
+.ecgc{position:absolute;left:14.85cm;top:0;width:14.85cm;height:10.45cm;padding:.6cm 1cm 0;text-align:center;outline:1px dashed #8a9aa5;display:flex;flex-direction:column}
+.ecgc.d{top:10.45cm;padding:.6cm .9cm 0;text-align:left}
+.ecgc img{height:2.1cm;flex-shrink:0;display:block;margin:0 auto .3cm}
+.ecgc .e1{font-size:16pt;line-height:1.3}.ecgc .e2{font-weight:700;font-size:14pt;line-height:1.3}.ecgc .e3{font-size:13pt;line-height:1.3}
 .ecgc .lk{color:#1155cc;text-decoration:underline}
-.ecgc .et{font-weight:700;font-size:17pt;margin-top:2.6cm}
-.ecgc .ef{text-align:left;margin-top:2.4cm}.ecgc .ef p{margin:0 0 .75cm;font-size:12pt}.ecgc .ef .rd{font-size:13pt}
+.ecgc .et{font-weight:700;font-size:17pt;margin-top:auto;margin-bottom:.9cm}
+.ecgc .ef{text-align:left;flex:1;display:flex;flex-direction:column;justify-content:space-evenly;padding-bottom:.5cm}.ecgc .ef p{margin:0;font-size:14pt;line-height:1.3}.ecgc .ef .rd{font-size:14pt}
 .hide{display:none!important}
 @media print{
  body{background:#fff}
  body[data-view="eletro"] #tool{display:none!important}
  .ecgsheet{zoom:1!important;width:auto}
  .ecgpg{box-shadow:none;height:20.8cm}
+ .ecgc{outline:none}
  .bar,#home,.panels,.prevh,.noprint{display:none!important}
  main,.layout,.scroll{display:block;max-width:none;padding:0;margin:0;overflow:visible}
  #tool{display:block!important}
@@ -242,7 +244,7 @@ body[data-paper="a6"] .sheet{zoom:.9}
   var u=function(x){return "<b><u>"+esc(x)+"</u></b>"};
   $("ecgsheet").innerHTML='<div class="ecgpg"><div class="ecgc">'+(ecLogo?'<img alt="Logo" src="'+ecLogo+'">':'')
    +'<div class="e1">'+esc(v("ec_sec"))+'</div><div class="e2">'+esc(v("ec_ubs"))+'</div><div class="e3">'+esc(v("ec_end"))+'</div><div class="e3">Fone: '+fn+'</div><div class="e3">e-mail: <span class="lk">'+esc(v("ec_mail"))+'</span></div>'
-   +'<div class="et">ELETROCARDIOGRAMA</div><div class="ef"><p>CPF: '+u(v("e_cpf"))+' &nbsp;Realizado: <b class="rd">'+esc(ds)+'</b></p><p>Paciente: '+u(v("e_nome").toUpperCase())+'</p><p>DN: '+u(v("e_dn"))+'</p><p>Médico Solicitante: '+u(v("e_medico"))+'</p><p>Responsável: '+u(v("e_resp"))+'</p></div></div></div>';
+   +'<div class="et">ELETROCARDIOGRAMA</div></div><div class="ecgc d"><div class="ef"><p>CPF: '+u(v("e_cpf"))+' &nbsp;Realizado: <b class="rd">'+esc(ds)+'</b></p><p>Paciente: '+u(v("e_nome").toUpperCase())+'</p><p>DN: '+u(v("e_dn"))+'</p><p>Médico Solicitante: '+u(v("e_medico"))+'</p><p>Responsável: '+u(v("e_resp"))+'</p></div></div></div>';
  }
  $("e_proc").onclick=function(){
   var t=$("e_bloco").value,L=t.split(/\r?\n/).map(function(s){return s.trim()}).filter(Boolean),n=0;
