@@ -55,9 +55,20 @@ body[data-paper="a6"] .sheet{zoom:.9}
 .card table{margin-top:2mm;border-collapse:collapse;width:100%}
 .card th,.card td{border:.3mm solid #000;height:.6cm;text-align:center;font-size:9pt;padding:0;font-weight:400}
 .card td:nth-child(1){width:24%;font-style:italic}.card td:nth-child(2){width:24%}
+.ecgsheet{zoom:.42;width:max-content}
+.ecgpg{width:29.7cm;height:20.9cm;background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;overflow:hidden;box-shadow:0 0 0 1px var(--line)}
+.ecgc{margin-left:16.4cm;width:12.8cm;padding-top:1.9cm;text-align:center}
+.ecgc img{height:2.1cm;display:block;margin:0 auto .5cm}
+.ecgc .e1{font-size:16pt}.ecgc .e2{font-weight:700;font-size:14pt}.ecgc .e3{font-size:11pt;line-height:1.35}
+.ecgc .lk{color:#1155cc;text-decoration:underline}
+.ecgc .et{font-weight:700;font-size:17pt;margin-top:2.6cm}
+.ecgc .ef{text-align:left;margin-top:2.4cm}.ecgc .ef p{margin:0 0 .75cm;font-size:12pt}.ecgc .ef .rd{font-size:13pt}
 .hide{display:none!important}
 @media print{
  body{background:#fff}
+ body[data-view="eletro"] #tool{display:none!important}
+ .ecgsheet{zoom:1!important;width:auto}
+ .ecgpg{box-shadow:none;height:20.8cm}
  .bar,#home,.panels,.prevh,.noprint{display:none!important}
  main,.layout,.scroll{display:block;max-width:none;padding:0;margin:0;overflow:visible}
  #tool{display:block!important}
@@ -87,6 +98,7 @@ body[data-paper="a6"] .sheet{zoom:.9}
  <section id="home">
   <div class="tiles">
    <a class="tile on" href="#cartao"><h2>Cartão de agendamento</h2><p>Cole o bloco do paciente no PEC/e-SUS e imprima frente e verso, um por vez.</p></a>
+   <a class="tile on" href="#eletro"><h2>Capa de eletrocardiograma</h2><p>Cole o bloco do paciente, confira os dados e imprima a capa do ECG já preenchida.</p></a>
    <div class="tile off"><h2>Próxima ferramenta</h2><p>Diga o que você precisa (etiquetas, relatórios, aniversariantes…) e eu adiciono aqui.</p></div>
   </div>
  </section>
@@ -116,6 +128,21 @@ body[data-paper="a6"] .sheet{zoom:.9}
     <p class="prevh">Visualização para impressão (frente à esquerda, verso à direita)</p>
     <div class="scroll"><div class="sheet" id="sheet"></div></div>
    </div>
+  </div>
+ </section>
+ <section id="eletro" class="hide">
+  <p class="noprint"><a href="#" style="color:var(--accent);font-weight:600;text-decoration:none">← Voltar às ferramentas</a></p>
+  <div class="layout">
+   <div class="panels">
+    <div class="panel"><h2>Copiar e colar do e-SUS PEC</h2><label for="e_bloco">Cole o bloco de texto copiado da página do paciente:</label><textarea id="e_bloco" spellcheck="false"></textarea>
+     <div class="row"><button class="grow" id="e_proc" type="button">Processar dados do bloco</button></div><p class="msg" id="e_msg"></p>
+     <p class="msg">Privacidade: os dados do paciente ficam só nesta tela e nada é enviado ou salvo.</p></div>
+    <div class="panel"><h2>Dados do exame</h2><div class="fg" id="ep"></div><div class="row"><button class="green grow" id="e_pr" type="button">Imprimir capa</button></div></div>
+    <div class="panel"><h2>Configuração da capa</h2><div class="fg" id="ec"></div>
+     <div style="margin-top:10px"><label for="e_logo">Logo da capa (brasão + Prefeitura de Iperó)</label><input type="file" id="e_logo" accept="image/*"></div>
+     <p class="msg">Estes campos, o médico e o responsável ficam salvos neste navegador.</p></div>
+   </div>
+   <div><p class="prevh">Visualização (A4 paisagem; a capa fica na metade direita)</p><div class="scroll"><div class="ecgsheet" id="ecgsheet"></div></div></div>
   </div>
  </section>
 </main>
@@ -197,10 +224,45 @@ body[data-paper="a6"] .sheet{zoom:.9}
    c.width=w;c.height=h;c.getContext("2d").drawImage(im,0,0,w,h);brasao=c.toDataURL("image/png");ls("cfg_brasao",brasao);render()};im.src=r.result};r.readAsDataURL(f)};
  document.querySelectorAll("#fp input,#fc input").forEach(function(i){i.addEventListener("input",function(){
   if(i.id.indexOf("c_")===0||i.id==="p_unidade")ls("cfg_"+i.id.slice(2),i.value);render();route()})});
- function route(){var t=location.hash==="#cartao";$("tool").classList.toggle("hide",!t);$("home").classList.toggle("hide",t);$("tb").classList.toggle("hide",!t);
+ function route(){var h=location.hash,t=h==="#cartao",e=h==="#eletro";document.body.setAttribute("data-view",e?"eletro":t?"cartao":"home");$("eletro").classList.toggle("hide",!e);$("tool").classList.toggle("hide",!t);$("home").classList.toggle("hide",t||e);$("tb").classList.toggle("hide",!t);if(e){$("t").textContent="Capa de Eletrocardiograma";$("st").textContent="Preenchimento automático da capa";return}
   $("t").textContent=t?"Emissor de Cartão de Agendamento":"Painel da Unidade";
   $("st").textContent=t?(v("p_unidade")+" • Prefeitura Municipal de "+v("c_municipio")):"Ferramentas do dia a dia da unidade de saúde"}
- window.addEventListener("hashchange",route);route();applyPaper();render();
+ var EP=[["nome","Nome do paciente",1],["cpf","CPF"],["dn","Data de nascimento"],["data","Data de realização"],["medico","Médico solicitante",1],["resp","Responsável",1]];
+ var EC=[["sec","Secretaria",1,"SECRETARIA MUNICIPAL DE SAÚDE"],["ubs","Unidade",1,"UBS CACILDA FOGACA DE ALMEIDA"],["end","Endereço",1,"AV. GEORGE OETTERER, SNº - GO - Iperó/SP"],["fone","Telefones (separe com /)",1,"15 996613559 / 15 99731-2881"],["mail","E-mail",1,"ubs.cacilda@ipero.sp.gov.br"]];
+ build($("ep"),EP,"e_");build($("ec"),EC,"ec_");
+ var td=new Date(),iso=td.getFullYear()+"-"+("0"+(td.getMonth()+1)).slice(-2)+"-"+("0"+td.getDate()).slice(-2);
+ $("e_data").type="date";$("e_data").value=iso;
+ EC.forEach(function(f){var s=ls("ecfg_"+f[0]);$("ec_"+f[0]).value=s!==null?s:f[3]});
+ var sr=ls("ecfg_resp"),sm=ls("ecfg_medico");$("e_resp").value=sr!==null?sr:"TÉC. Geisa Leidiana";$("e_medico").value=sm!==null?sm:"";
+ var ecLogo=ls("ecfg_logo")||"";
+ function ecRender(){
+  var dt=$("e_data").value,ds="";
+  if(dt){var q=dt.split("-");ds=new Date(+q[0],+q[1]-1,+q[2]).toLocaleDateString("pt-BR",{day:"numeric",month:"short",year:"numeric"})}
+  var fn=v("ec_fone").split("/").map(function(s){return "<b>"+esc(s.trim())+"</b>"}).join(" / ");
+  var u=function(x){return "<b><u>"+esc(x)+"</u></b>"};
+  $("ecgsheet").innerHTML='<div class="ecgpg"><div class="ecgc">'+(ecLogo?'<img alt="Logo" src="'+ecLogo+'">':'')
+   +'<div class="e1">'+esc(v("ec_sec"))+'</div><div class="e2">'+esc(v("ec_ubs"))+'</div><div class="e3">'+esc(v("ec_end"))+'</div><div class="e3">Fone: '+fn+'</div><div class="e3">e-mail: <span class="lk">'+esc(v("ec_mail"))+'</span></div>'
+   +'<div class="et">ELETROCARDIOGRAMA</div><div class="ef"><p>CPF: '+u(v("e_cpf"))+' &nbsp;Realizado: <b class="rd">'+esc(ds)+'</b></p><p>Paciente: '+u(v("e_nome").toUpperCase())+'</p><p>DN: '+u(v("e_dn"))+'</p><p>Médico Solicitante: '+u(v("e_medico"))+'</p><p>Responsável: '+u(v("e_resp"))+'</p></div></div></div>';
+ }
+ $("e_proc").onclick=function(){
+  var t=$("e_bloco").value,L=t.split(/\r?\n/).map(function(s){return s.trim()}).filter(Boolean),n=0;
+  if(!L.length){$("e_msg").textContent="Cole o bloco de texto antes de processar.";return}
+  var set=function(k,x){if(x&&x.trim()){$("e_"+k).value=x.trim();n++}},m;
+  set("nome",L[0].split("|")[0]);
+  m=/Nasceu em\s*(\d{2}\/\d{2}\/\d{4})/i.exec(t);set("dn",m&&m[1]);
+  m=/CPF\s*:?\s*(\d{3}\.?\d{3}\.?\d{3}-?\d{2})/i.exec(t);set("cpf",m&&m[1]);
+  var vz=[["nome","nome"],["cpf","CPF"],["dn","nascimento"],["medico","médico solicitante"]].filter(function(p){return !v("e_"+p[0])}).map(function(p){return p[1]});
+  $("e_msg").textContent="Campos lidos: "+n+". Falta preencher: "+(vz.length?vz.join(", "):"nada")+".";ecRender()};
+ document.querySelectorAll("#ep input,#ec input").forEach(function(i){i.addEventListener("input",function(){
+  if(i.id.indexOf("ec_")===0)ls("ecfg_"+i.id.slice(3),i.value);
+  if(i.id==="e_medico"||i.id==="e_resp")ls("ecfg_"+i.id.slice(2),i.value);
+  ecRender()})});
+ $("e_logo").onchange=function(){var f=this.files[0];if(!f)return;var r=new FileReader();
+  r.onload=function(){var im=new Image();im.onload=function(){var h=Math.min(300,im.height),w=im.width*h/im.height,c=document.createElement("canvas");
+   c.width=w;c.height=h;c.getContext("2d").drawImage(im,0,0,w,h);ecLogo=c.toDataURL("image/png");ls("ecfg_logo",ecLogo);ecRender()};im.src=r.result};r.readAsDataURL(f)};
+ $("e_pr").onclick=function(){$("pgs").textContent="@page{size:A4 landscape;margin:0}";window.print()};
+ ecRender();
+ window.addEventListener("hashchange",route);route();applyPaper();render();route();
 })();
 </script>
 </body>
