@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Painel da Unidade</title>
+<style>
+:root{--bg:#eef2f5;--surface:#fff;--ink:#1c2b36;--muted:#5d6f7c;--line:#d5dde3;--bar:#0b5a7c;--accent:#0b5a7c;--green:#1f9d61;--field:#f6f8fa;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101a21;--surface:#18252e;--ink:#e5edf2;--muted:#9db0bc;--line:#2c3f4b;--bar:#0b3f58;--accent:#5fb4e8;--field:#101a21;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#101a21;--surface:#18252e;--ink:#e5edf2;--muted:#9db0bc;--line:#2c3f4b;--bar:#0b3f58;--accent:#5fb4e8;--field:#101a21;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
+.bar{background:var(--bar);color:#fff;padding:14px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.bar h1{margin:0;font-size:1.3rem}.bar small{opacity:.85}
+.bar .btns{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:9px 14px;cursor:pointer;color:#fff;background:var(--accent)}
+.bar button.sec{background:rgba(255,255,255,.18)}
+button.green{background:var(--green)}
+button.ghost{background:var(--field);color:var(--ink);border:1px solid var(--line)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #f2b705;outline-offset:2px}
+main{max-width:1320px;margin:0 auto;padding:18px 20px 40px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.tile{display:block;padding:18px;background:var(--surface);border:1px solid var(--line);border-radius:10px;color:inherit;text-decoration:none}
+.tile h2{margin:0 0 4px;font-size:1.05rem}.tile p{margin:0;color:var(--muted);font-size:.92rem}
+.tile.on{border-left:5px solid var(--accent)}.tile.off{border-style:dashed;opacity:.75}
+.layout{display:grid;grid-template-columns:minmax(300px,430px) 1fr;gap:18px;align-items:start}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+.panel h2{margin:0 0 10px;font-size:.95rem;color:var(--accent)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fg .w{grid-column:1/-1}
+label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:2px}
+input,textarea,select{width:100%;font:inherit;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:8px;padding:8px}
+textarea{min-height:120px;font:13px/1.4 ui-monospace,Consolas,monospace}
+.row{display:flex;gap:10px;margin-top:10px}.row .grow{flex:1}
+.msg{font-size:.85rem;color:var(--muted);margin:8px 0 0}
+.prevh{font-weight:700;color:var(--muted);margin:0 0 10px}
+.scroll{overflow-x:auto;padding-bottom:8px}
+.sheet{display:flex;gap:.6cm;width:max-content;zoom:.6}
+.half{width:14.8cm;height:21cm;display:flex;align-items:center;justify-content:center;background:#fff;box-shadow:0 0 0 1px var(--line)}
+body[data-paper="a6"] .half{width:10.5cm;height:14.8cm}
+body[data-paper="a6"] .card{zoom:.7}
+body[data-paper="a6"] .sheet{zoom:.9}
+.card{width:14cm;height:20cm;background:#fff;color:#000;border:.4mm solid #000;padding:4mm 5mm;display:flex;flex-direction:column;overflow:hidden;font:10pt/1.3 Arial,Helvetica,sans-serif}
+.hd{display:flex;align-items:center;gap:4mm;border-bottom:.3mm solid #000;padding-bottom:2mm;min-height:2.6cm}
+.hd img{height:2.3cm;width:auto;max-width:3cm;object-fit:contain}
+.hd .tx{flex:1;text-align:center}
+.hd .s{font:italic 13.5pt/1.3 Georgia,"Palatino Linotype",serif}
+.hd .c{font-weight:700;font-size:10.5pt;margin-top:1.5mm}
+.ln{display:flex;justify-content:space-between;align-items:baseline;border-bottom:.25mm solid #000;padding:1.4mm 0;gap:3mm}
+.ln i{font-style:normal;font-size:9pt;color:#333}.ln b{font-size:10.5pt}
+.ob{padding:1.5mm 0 1mm;font-size:9.5pt}
+.if{border:.3mm solid #000;padding:1mm 3mm;text-align:center;font-size:9.5pt}
+.card table{margin-top:2mm;border-collapse:collapse;width:100%}
+.card th,.card td{border:.3mm solid #000;height:.6cm;text-align:center;font-size:9pt;padding:0;font-weight:400}
+.card td:nth-child(1){width:24%;font-style:italic}.card td:nth-child(2){width:24%}
+.hide{display:none!important}
+@media print{
+ body{background:#fff}
+ .bar,#home,.panels,.prevh,.noprint{display:none!important}
+ main,.layout,.scroll{display:block;max-width:none;padding:0;margin:0;overflow:visible}
+ #tool{display:block!important}
+ .sheet{display:block;zoom:1;width:auto}
+ .pg{break-after:page;page-break-after:always;overflow:hidden;display:flex}
+ .pg:last-child{break-after:auto;page-break-after:auto}
+ .half{box-shadow:none}
+ body[data-paper="a4"] .pg{width:29.7cm;height:20.9cm}
+ body[data-paper="a5"] .pg{width:14.8cm;height:20.9cm}
+ body[data-paper="a4"] .pg.bk{justify-content:flex-end}
+ body[data-paper="a6"] .pg{display:grid;grid-template-columns:10.5cm 10.5cm;grid-template-rows:14.8cm 14.8cm;width:21cm;height:29.5cm}
+ body[data-paper="a6"] .half{grid-column:var(--c);grid-row:var(--r)}
+ body[data-paper="a6"] .sheet{zoom:1}
+}
+</style>
+<style id="pgs">@page{size:A4 landscape;margin:0}</style>
+</head>
+<body data-paper="a4">
+<div class="bar">
+ <div><h1 id="t">Painel da Unidade</h1><small id="st">Ferramentas do dia a dia da unidade de saúde</small></div>
+ <div class="btns hide" id="tb">
+  <button class="sec" id="ex" type="button">Dados de exemplo</button>
+  <button class="green" id="pr" type="button">Imprimir cartão (frente e verso)</button>
+ </div>
+</div>
+<main>
+ <section id="home">
+  <div class="tiles">
+   <a class="tile on" href="#cartao"><h2>Cartão de agendamento</h2><p>Cole o bloco do paciente no PEC/e-SUS e imprima frente e verso, um por vez.</p></a>
+   <div class="tile off"><h2>Próxima ferramenta</h2><p>Diga o que você precisa (etiquetas, relatórios, aniversariantes…) e eu adiciono aqui.</p></div>
+  </div>
+ </section>
+ <section id="tool" class="hide">
+  <p class="noprint"><a href="#" style="color:var(--accent);font-weight:600;text-decoration:none">← Voltar às ferramentas</a></p>
+  <div class="layout">
+   <div class="panels">
+    <div class="panel">
+     <h2>Copiar e colar do e-SUS PEC</h2>
+     <label for="bloco">Cole o bloco de texto copiado da página do paciente:</label>
+     <textarea id="bloco" spellcheck="false"></textarea>
+     <div class="row"><button class="grow" id="proc" type="button">Processar dados do bloco</button><button class="ghost" id="lim" type="button">Limpar</button></div>
+     <p class="msg" id="msg"></p>
+     <p class="msg">Privacidade: os dados do paciente ficam só nesta tela e nada é enviado ou salvo.</p>
+    </div>
+    <div class="panel"><h2>Formulário do paciente</h2><div class="fg" id="fp"></div><p class="msg">Campos vazios saem como “Ñ Inf.” no cartão.</p></div>
+    <div class="panel"><h2>Configuração da unidade</h2><div class="fg" id="fc"></div>
+     <div style="margin-top:10px"><label for="paper">Papel de impressão</label>
+      <select id="paper"><option value="a6">Cartão A6 em folha A4 retrato (4 por folha)</option><option value="a4">Cartão A5 em A4 paisagem (frente à esquerda, verso à direita; corte ao meio)</option><option value="a5">Cartão A5 em folha A5 retrato</option></select></div>
+     <div style="margin-top:10px" id="poswrap"><label for="pos">Posição na folha A4 (para reaproveitar o papel)</label>
+      <select id="pos"><option value="0,0">1º: superior esquerdo</option><option value="1,0">2º: superior direito</option><option value="0,1">3º: inferior esquerdo</option><option value="1,1">4º: inferior direito</option></select>
+      <p class="msg">Frente e verso: imprima em frente e verso virando pela borda maior. O verso sai espelhado para casar com a frente. Depois recorte o cartão.</p></div>
+     <div style="margin-top:10px"><label for="brasao">Brasão do município (imagem)</label><input type="file" id="brasao" accept="image/*"></div>
+     <p class="msg">Estes campos e o brasão ficam salvos neste navegador.</p></div>
+   </div>
+   <div>
+    <p class="prevh">Visualização para impressão (frente à esquerda, verso à direita)</p>
+    <div class="scroll"><div class="sheet" id="sheet"></div></div>
+   </div>
+  </div>
+ </section>
+</main>
+<script>
+(function(){
+ var $=function(i){return document.getElementById(i)};
+ var P=[["unidade","Unidade / UBS",1],["matricula","Matrícula / Prontuário"],["nasc","Data de nascimento"],["nome","Nome do paciente",1],["sexo","Gênero / sexo"],["cpf","CPF"],["cns","CNS"],["cel","Celular"],["rec","Telefone recado (Rec)"],["end","Endereço",1],["civil","Estado civil"],["sangue","Tipo sanguíneo"],["cor","Cor / raça"],["mae","Nome da mãe",1],["pai","Nome do pai",1]];
+ var C=[["municipio","Município (Prefeitura Municipal de …)",1,"Iperó"],["obs","Observação do cartão",1,"Caso não possa comparecer a consulta avisar com 24 horas de antecedência"],["info","Telefones de informações (separe com ;)",1,"(15) 99661-3560; (15) 99731-2881"]];
+ var EX="Edneia Ramos Gomes | Sexo Feminino\n49 anos e 9 meses | Nasceu em 01/02/1977\nTelefone(15) 99654-7166\nCNS 705405473672797\nDalva Ramos\nUBS Cacilda\nEndereço: Rua Canada, 918\nPai: Antonio Gomes\nCor: Parda";
+ var brasao="";
+ function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+ function build(box,list,pre){list.forEach(function(f){var d=document.createElement("div");if(f[2])d.className="w";
+  var l=document.createElement("label");l.htmlFor=pre+f[0];l.textContent=f[1];var i=document.createElement("input");i.id=pre+f[0];
+  d.appendChild(l);d.appendChild(i);box.appendChild(d)})}
+ build($("fp"),P,"p_");build($("fc"),C,"c_");
+ C.forEach(function(f){var s=ls("cfg_"+f[0]);$("c_"+f[0]).value=s!==null?s:f[3]});
+ var u=ls("cfg_unidade");$("p_unidade").value=u!==null?u:"UBS Cacilda";
+ var pp=ls("cfg_paper");if(pp)$("paper").value=pp;
+ brasao=ls("cfg_brasao")||"";
+ function v(i){return $(i).value.trim()}
+ function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+ function g(k){var x=v("p_"+k);return esc(x||"Ñ Inf.")}
+ function gb(k){return esc(v("p_"+k))}
+ function tab(n){var r='<table><tr><th>Data</th><th>Horário</th><th>Agendamento</th></tr>';
+  for(var i=0;i<n;i++)r+='<tr><td>/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/</td><td></td><td></td></tr>';return r+'</table>'}
+ function hd(t){return '<div class="hd">'+(brasao?'<img alt="Brasão" src="'+brasao+'">':'')+'<div class="tx"><div class="s">Secretaria Municipal de Saúde</div><div class="s">Prefeitura Municipal de '+esc(v("c_municipio"))+'</div>'+(t?'<div class="c">Cartão de Agendamento - '+gb("unidade")+'</div>':'')+'</div></div>'}
+ function render(){
+  var info=v("c_info").split(";").map(function(s){return esc(s.trim())}).filter(Boolean).join("<br>");
+  var fr='<div class="card">'+hd(1)
+   +'<div class="ln"><span><i>Matrícula:</i> <b>'+gb("matricula")+'</b></span><span><i>Data Nasc:</i> <b>'+gb("nasc")+'</b></span></div>'
+   +'<div class="ln"><span><i>Nome:</i> <b>'+gb("nome")+'</b> <b>'+(gb("sexo")?'| '+gb("sexo"):'')+'</b></span></div>'
+   +'<div class="ln"><span><i>CPF ou SUS:</i> <b>'+g("cpf")+'</b></span><span><b>CNS: '+g("cns")+'</b></span></div>'
+   +'<div class="ln"><span><i>Cel:</i> <b>'+g("cel")+'</b></span><span><i>Rec:</i> <b>'+g("rec")+'</b></span></div>'
+   +'<div class="ob">OBSERVAÇÃO - '+esc(v("c_obs"))+'</div><div class="if">INFORMAÇÕES:<br>'+info+'</div>'+tab(15)+'</div>';
+  var bk='<div class="card">'+hd(0)
+   +'<div class="ln"><span><i>End.:</i> <b>'+g("end")+'</b></span></div>'
+   +'<div class="ln"><span><i>Estado Civil:</i> <b>'+g("civil")+'</b> | <i>Sangue:</i> <b>'+g("sangue")+'</b> | <i>Cor:</i> <b>'+g("cor")+'</b></span></div>'
+   +'<div class="ln"><span><i>Mãe:</i> <b>'+g("mae")+'</b> | <i>Pai:</i> <b>'+g("pai")+'</b></span></div>'+tab(22)+'</div>';
+  var ps=($("pos").value||"0,0").split(","),pc=+ps[0],pw=+ps[1];
+  $("sheet").innerHTML='<div class="pg fr"><div class="half" style="--c:'+(pc+1)+';--r:'+(pw+1)+'">'+fr+'</div></div><div class="pg bk"><div class="half" style="--c:'+(2-pc)+';--r:'+(pw+1)+'">'+bk+'</div></div>';
+  $("st").textContent=location.hash==="#cartao"?(v("p_unidade")+" • Prefeitura Municipal de "+v("c_municipio")):"Ferramentas do dia a dia da unidade de saúde";
+ }
+ function proc(){
+  var t=$("bloco").value,L=t.split(/\r?\n/).map(function(s){return s.trim()}).filter(Boolean),found=0;
+  var set=function(k,x){if(x&&x.trim()){$("p_"+k).value=x.trim();found++}};
+  if(!L.length){$("msg").textContent="Cole o bloco de texto antes de processar.";return}
+  set("nome",L[0].split("|")[0]);var s=/Sexo\s+(\S+)/i.exec(L[0]);set("sexo",s&&s[1]);
+  var x=function(re){var r=re.exec(t);return r&&r[1]};
+  set("nasc",x(/Nasceu em\s*(\d{2}\/\d{2}\/\d{4})/i));
+  set("cel",x(/(?:Telefone|Celular)\s*:?\s*(\(?\d[\d\s().-]{7,})/i));
+  set("cpf",x(/CPF\s*:?\s*(\d{3}\.?\d{3}\.?\d{3}-?\d{2})/i));
+  set("cns",x(/CNS\s*:?\s*(\d{15})/i)||x(/\b(\d{15})\b/));
+  set("matricula",x(/(?:Prontu[áa]rio|Matr[íi]cula)\s*:?\s*(\S+)/i));
+  set("end",x(/Endere[çc]o\s*:?\s*(.+)/i));
+  set("civil",x(/Estado civil\s*:?\s*([^|\n]+)/i));
+  set("sangue",x(/(?:Tipo sangu[íi]neo|Sangue)\s*:?\s*([ABO]{1,2}\s?[+-]?)/i));
+  set("cor",x(/Cor(?:\/Ra[çc]a)?\s*:?\s*([^|\n]+)/i));
+  set("pai",x(/Pai\s*:?\s*(.+)/i));
+  var mae=x(/M[ãa]e\s*:?\s*(.+)/i);
+  if(!mae){for(var i=0;i<L.length;i++){if(/^(CPF|CNS)/i.test(L[i])){var n=L[i+1];if(n&&!/\d|^(UBS|ESF|USF|Pai|Endere)/i.test(n))mae=n;if(!mae&&/^CPF/i.test(L[i])&&L[i+1]&&/^CNS/i.test(L[i+1])){n=L[i+2];if(n&&!/\d|^(UBS|ESF|USF)/i.test(n))mae=n}break}}}
+  set("mae",mae);
+  set("unidade",L.filter(function(l){return /^(UBS|ESF|USF|Unidade)\b/i.test(l)})[0]);
+  var vz=P.filter(function(p){return !v("p_"+p[0])}).map(function(p){return p[1]});
+  $("msg").textContent="Campos lidos: "+found+". Sem dado (sairão como Ñ Inf.): "+(vz.length?vz.join(", "):"nenhum")+".";
+  render();
+ }
+ $("proc").onclick=proc;
+ $("lim").onclick=function(){$("bloco").value="";P.forEach(function(p){if(p[0]!=="unidade")$("p_"+p[0]).value=""});$("msg").textContent="";render()};
+ $("ex").onclick=function(){$("bloco").value=EX;proc()};
+ function applyPaper(){var a=$("paper").value;document.body.setAttribute("data-paper",a);
+  $("pgs").textContent="@page{size:"+(a==="a4"?"A4 landscape":a==="a5"?"A5 portrait":"A4 portrait")+";margin:0}";
+  $("poswrap").classList.toggle("hide",a!=="a6")}
+ $("pr").onclick=function(){applyPaper();window.print()};
+ $("paper").onchange=function(){ls("cfg_paper",$("paper").value);applyPaper();render()};
+ $("pos").onchange=function(){ls("cfg_pos",$("pos").value);render()};
+ var pq=ls("cfg_pos");if(pq)$("pos").value=pq;
+ $("brasao").onchange=function(){var f=this.files[0];if(!f)return;var r=new FileReader();
+  r.onload=function(){var im=new Image();im.onload=function(){var h=Math.min(260,im.height),w=im.width*h/im.height,c=document.createElement("canvas");
+   c.width=w;c.height=h;c.getContext("2d").drawImage(im,0,0,w,h);brasao=c.toDataURL("image/png");ls("cfg_brasao",brasao);render()};im.src=r.result};r.readAsDataURL(f)};
+ document.querySelectorAll("#fp input,#fc input").forEach(function(i){i.addEventListener("input",function(){
+  if(i.id.indexOf("c_")===0||i.id==="p_unidade")ls("cfg_"+i.id.slice(2),i.value);render();route()})});
+ function route(){var t=location.hash==="#cartao";$("tool").classList.toggle("hide",!t);$("home").classList.toggle("hide",t);$("tb").classList.toggle("hide",!t);
+  $("t").textContent=t?"Emissor de Cartão de Agendamento":"Painel da Unidade";
+  $("st").textContent=t?(v("p_unidade")+" • Prefeitura Municipal de "+v("c_municipio")):"Ferramentas do dia a dia da unidade de saúde"}
+ window.addEventListener("hashchange",route);route();applyPaper();render();
+})();
+</script>
+</body>
+</html>
