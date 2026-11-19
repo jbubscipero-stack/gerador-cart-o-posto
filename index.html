@@ -55,6 +55,15 @@ body[data-paper="a6"] .sheet{zoom:.9}
 .card table{margin-top:2mm;border-collapse:collapse;width:100%}
 .card th,.card td{border:.3mm solid #000;height:.6cm;text-align:center;font-size:9pt;padding:0;font-weight:400}
 .card td:nth-child(1){width:24%;font-style:italic}.card td:nth-child(2){width:24%}
+.tbl{width:100%;border-collapse:collapse;font-size:.88rem}
+.tbl th,.tbl td{border-bottom:1px solid var(--line);padding:4px 6px;text-align:left}
+.tbl th{color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--surface)}
+.tbl input{padding:4px 6px;font-size:.88rem;border-radius:6px;min-width:90px}
+.tbl tr.bad td{background:rgba(242,183,5,.2)}
+.tbl tr.done td{opacity:.5}
+.twrap{max-height:520px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.wa{display:inline-block;background:var(--green);color:#fff;text-decoration:none;border-radius:6px;padding:4px 10px;font-weight:600;font-size:.82rem;white-space:nowrap;cursor:pointer}
+.wa:not([href]){background:var(--line);color:var(--muted);cursor:not-allowed}
 .ecgsheet{zoom:.42;width:max-content}
 .ecgpg{position:relative;width:29.7cm;height:20.9cm;background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;overflow:hidden;box-shadow:0 0 0 1px var(--line)}
 .ecgc{position:absolute;left:14.85cm;top:0;width:14.85cm;height:10.45cm;padding:.6cm 1cm 0;text-align:center;outline:1px dashed #8a9aa5;display:flex;flex-direction:column}
@@ -68,6 +77,7 @@ body[data-paper="a6"] .sheet{zoom:.9}
 @media print{
  body{background:#fff}
  body[data-view="eletro"] #tool{display:none!important}
+ body[data-view="agenda"] #tool,body[data-view="agenda"] #agenda{display:none!important}
  .ecgsheet{zoom:1!important;width:auto}
  .ecgpg{box-shadow:none;height:20.8cm}
  .ecgc{outline:none}
@@ -101,6 +111,7 @@ body[data-paper="a6"] .sheet{zoom:.9}
   <div class="tiles">
    <a class="tile on" href="#cartao"><h2>Cartão de agendamento</h2><p>Cole o bloco do paciente no PEC/e-SUS e imprima frente e verso, um por vez.</p></a>
    <a class="tile on" href="#eletro"><h2>Capa de eletrocardiograma</h2><p>Cole o bloco do paciente, confira os dados e imprima a capa do ECG já preenchida.</p></a>
+   <a class="tile on" href="#agenda"><h2>Avisos de agenda</h2><p>Separa telefone, data, hora e médico da agenda e prepara o aviso de falta ou desistência.</p></a>
    <div class="tile off"><h2>Próxima ferramenta</h2><p>Diga o que você precisa (etiquetas, relatórios, aniversariantes…) e eu adiciono aqui.</p></div>
   </div>
  </section>
@@ -145,6 +156,28 @@ body[data-paper="a6"] .sheet{zoom:.9}
      <p class="msg">Estes campos, o médico e o responsável ficam salvos neste navegador.</p></div>
    </div>
    <div><p class="prevh">Visualização (A4 paisagem; a capa fica na metade direita)</p><div class="scroll"><div class="ecgsheet" id="ecgsheet"></div></div></div>
+  </div>
+ </section>
+ <section id="agenda" class="hide">
+  <p><a href="#" style="color:var(--accent);font-weight:600;text-decoration:none">← Voltar às ferramentas</a></p>
+  <div class="layout">
+   <div class="panels">
+    <div class="panel"><h2>1. Cole a agenda</h2>
+     <label for="a_txt">Cole o texto ou a tabela da agenda, uma consulta por linha:</label>
+     <textarea id="a_txt" spellcheck="false"></textarea>
+     <div class="row"><button class="grow" id="a_proc" type="button">Separar dados</button><button class="ghost" id="a_ex" type="button">Exemplo</button><button class="ghost" id="a_lim" type="button">Limpar</button></div>
+     <p class="msg" id="a_msg"></p>
+     <p class="msg">Só usamos telefone, data, hora, médico e especialidade (sem nome nem CPF). Nada é enviado ou salvo: tudo fica nesta tela.</p></div>
+    <div class="panel"><h2>2. Quem avisar</h2>
+     <div class="fg"><div><label for="a_med">Médico / especialidade</label><select id="a_med"></select></div><div><label for="a_dt">Data</label><select id="a_dt"></select></div></div>
+     <p class="msg" id="a_cnt"></p></div>
+    <div class="panel"><h2>3. Mensagem do aviso</h2>
+     <label for="a_tpl">Use {medico}, {especialidade}, {data} e {hora}. Ela fica salva neste navegador.</label>
+     <textarea id="a_tpl" style="min-height:150px;font:inherit"></textarea>
+     <div class="row"><button class="ghost grow" id="a_cp" type="button">Copiar telefones</button><button class="ghost grow" id="a_csv" type="button">Baixar CSV</button></div></div>
+   </div>
+   <div><p class="prevh">Consultas encontradas (edite o que estiver errado; linhas amarelas têm dado faltando)</p><div class="twrap"><table class="tbl" id="a_tbl"></table></div>
+    <p class="msg">O botão WhatsApp abre a conversa com a mensagem pronta. Você confere e envia manualmente.</p></div>
   </div>
  </section>
 </main>
@@ -226,7 +259,7 @@ body[data-paper="a6"] .sheet{zoom:.9}
    c.width=w;c.height=h;c.getContext("2d").drawImage(im,0,0,w,h);brasao=c.toDataURL("image/png");ls("cfg_brasao",brasao);render()};im.src=r.result};r.readAsDataURL(f)};
  document.querySelectorAll("#fp input,#fc input").forEach(function(i){i.addEventListener("input",function(){
   if(i.id.indexOf("c_")===0||i.id==="p_unidade")ls("cfg_"+i.id.slice(2),i.value);render();route()})});
- function route(){var h=location.hash,t=h==="#cartao",e=h==="#eletro";document.body.setAttribute("data-view",e?"eletro":t?"cartao":"home");$("eletro").classList.toggle("hide",!e);$("tool").classList.toggle("hide",!t);$("home").classList.toggle("hide",t||e);$("tb").classList.toggle("hide",!t);if(e){$("t").textContent="Capa de Eletrocardiograma";$("st").textContent="Preenchimento automático da capa";return}
+ function route(){var h=location.hash,t=h==="#cartao",e=h==="#eletro";document.body.setAttribute("data-view",e?"eletro":t?"cartao":"home");$("eletro").classList.toggle("hide",!e);$("tool").classList.toggle("hide",!t);$("home").classList.toggle("hide",t||e||h==="#agenda");$("agenda").classList.toggle("hide",h!=="#agenda");if(h==="#agenda"){document.body.setAttribute("data-view","agenda");$("tb").classList.add("hide");$("t").textContent="Avisos de Agenda";$("st").textContent="Separar dados da agenda e avisar pacientes";return}$("tb").classList.toggle("hide",!t);if(e){$("t").textContent="Capa de Eletrocardiograma";$("st").textContent="Preenchimento automático da capa";return}
   $("t").textContent=t?"Emissor de Cartão de Agendamento":"Painel da Unidade";
   $("st").textContent=t?(v("p_unidade")+" • Prefeitura Municipal de "+v("c_municipio")):"Ferramentas do dia a dia da unidade de saúde"}
  var EP=[["nome","Nome do paciente",1],["cpf","CPF"],["dn","Data de nascimento"],["data","Data de realização"],["medico","Médico solicitante",1],["resp","Responsável",1]];
@@ -264,6 +297,78 @@ body[data-paper="a6"] .sheet{zoom:.9}
    c.width=w;c.height=h;c.getContext("2d").drawImage(im,0,0,w,h);ecLogo=c.toDataURL("image/png");ls("ecfg_logo",ecLogo);ecRender()};im.src=r.result};r.readAsDataURL(f)};
  $("e_pr").onclick=function(){$("pgs").textContent="@page{size:A4 landscape;margin:0}";window.print()};
  ecRender();
+ var AR=[];
+ var ESP=["clínico geral","clinico geral","pediatria","ginecologia","obstetrícia","cardiologia","psiquiatria","ortopedia","dermatologia","endocrinologia","neurologia","oftalmologia","odontologia","dentista","nutrição","psicologia","fisioterapia","enfermagem","pré-natal","urologia","geriatria","fonoaudiologia"];
+ var AEX="(15) 99999-0001 | 20/11/2026 | 08:00 | Dr. Paulo Rogerio | Clínico geral\n(15) 98888-0002 | 20/11/2026 | 08:20 | Dr. Paulo Rogerio | Clínico geral\n(15) 97777-0003 | 20/11/2026 | 09:00 | Dra. Ana Lima | Pediatria";
+ var TPL="Olá! Aqui é da UBS Cacilda. Informamos que a consulta com {medico} {especialidade} do dia {data} às {hora} precisou ser cancelada. Por favor, entre em contato com a unidade para reagendar. Pedimos desculpas pelo transtorno.";
+ var st=ls("acfg_tpl");$("a_tpl").value=st!==null?st:TPL;
+ function normPhone(s){var d=String(s).replace(/\D/g,"");if(d.length>=12&&d.slice(0,2)==="55")d=d.slice(2);return d}
+ function fmtPhone(d){return d.length===11?"("+d.slice(0,2)+") "+d.slice(2,7)+"-"+d.slice(7):d.length===10?"("+d.slice(0,2)+") "+d.slice(2,6)+"-"+d.slice(6):d}
+ function fmtDate(s){var m=/(\d{1,2})[\/.-](\d{1,2})(?:[\/.-](\d{2,4}))?/.exec(s);if(!m)return "";var y=m[3]||String(new Date().getFullYear());if(y.length===2)y="20"+y;return ("0"+m[1]).slice(-2)+"/"+("0"+m[2]).slice(-2)+"/"+y}
+ function fmtTime(s){var m=/(\d{1,2})\s*(?::|h)\s*(\d{2})?/i.exec(s);return m?("0"+m[1]).slice(-2)+":"+(m[2]||"00"):""}
+ function lineParse(l){
+  var t=l,r={tel:"",data:"",hora:"",medico:"",esp:"",ok:false},m;
+  m=/(?<!\d)(?:\+?55\s?)?\(?\d{2}\)?[\s.-]?9?\d{4}[\s.-]?\d{4}(?!\d)/.exec(t);if(m){r.tel=normPhone(m[0]);t=t.replace(m[0]," ")}
+  m=/(?<!\d)\d{1,2}[\/.-]\d{1,2}(?:[\/.-]\d{2,4})?(?!\d)/.exec(t);if(m){r.data=fmtDate(m[0]);t=t.replace(m[0]," ")}
+  m=/(?<!\d)([01]?\d|2[0-3])\s*(?::|h)\s*([0-5]\d)?(?!\d)/i.exec(t);if(m){r.hora=fmtTime(m[0]);t=t.replace(m[0]," ")}
+  var low=t.toLowerCase();
+  ESP.forEach(function(e){if(!r.esp&&low.indexOf(e)>-1)r.esp=e.charAt(0).toUpperCase()+e.slice(1)});
+  m=/(?:^|[\s|;,])(Dr[a\u00aa]?\.?|Dr\(a\)\.?)\s+([\p{L}]+(?:\s+[\p{L}]+){0,3})/iu.exec(t);
+  if(m){var tk=m[2].split(/\s+/),nm=[],STOP=["cel","tel","fone","celular","telefone","whatsapp","consulta","às","as","dia","hora"];
+   for(var q=0;q<tk.length;q++){var lw=tk[q].toLowerCase();if(STOP.indexOf(lw)>-1||ESP.some(function(e){return e.split(" ")[0]===lw}))break;nm.push(tk[q])}
+   r.medico=(m[1]+(/\.$/.test(m[1])?"":".")+" "+nm.join(" ")).trim()}
+  return r}
+ function aParse(text){
+  var L=text.split(/\r?\n/).map(function(s){return s.trim()}).filter(Boolean),out=[],hd=null,d=null;
+  if(!L.length)return out;
+  d=L[0].indexOf("\t")>-1?"\t":(L[0].indexOf(";")>-1?";":null);
+  if(d){var H=L[0].split(d).map(function(s){return s.trim().toLowerCase()});
+   var ix=function(re){for(var i=0;i<H.length;i++)if(re.test(H[i]))return i;return -1};
+   hd={tel:ix(/tel|cel|fone|whats/),data:ix(/data|dia/),hora:ix(/hor[aáà]/),med:ix(/m[eé]dico|profission|^dr/),esp:ix(/especial|servi[cç]o/)};
+   if(hd.tel<0&&hd.data<0&&hd.med<0)hd=null}
+  L.forEach(function(l,k){
+   if(hd){if(k===0)return;var c=l.split(d).map(function(s){return s.trim()}),g=function(i){return i>=0?(c[i]||""):""};
+    var r={tel:normPhone(g(hd.tel)),data:fmtDate(g(hd.data)),hora:fmtTime(g(hd.hora)),medico:g(hd.med),esp:g(hd.esp),ok:false};
+    if(!r.hora&&hd.data>=0)r.hora=fmtTime(g(hd.data).replace(/\d{1,2}[\/.-]\d{1,2}([\/.-]\d{2,4})?/,""));
+    out.push(r)}
+   else out.push(lineParse(l))});
+  return out}
+ function aMk(r){return ((r.medico||"")+(r.medico&&r.esp?" – ":"")+(r.esp||""))||"(sem médico)"}
+ function aMsg(r){return $("a_tpl").value.replace(/\{medico\}/g,r.medico||"o profissional").replace(/\{especialidade\}/g,r.esp||"").replace(/\{data\}/g,r.data).replace(/\{hora\}/g,r.hora).replace(/ {2,}/g," ")}
+ function aLink(r){return /^\d{10,11}$/.test(r.tel)?"https://wa.me/55"+r.tel+"?text="+encodeURIComponent(aMsg(r)):""}
+ function aFill(sel,arr,all){var cur=sel.value;sel.textContent="";var o=document.createElement("option");o.value="";o.textContent=all;sel.appendChild(o);arr.forEach(function(x){var e=document.createElement("option");e.value=x;e.textContent=x;sel.appendChild(e)});if(arr.indexOf(cur)>-1)sel.value=cur}
+ function aFilters(){var ms=[],ds=[];AR.forEach(function(r){var k=aMk(r);if(ms.indexOf(k)<0)ms.push(k);if(r.data&&ds.indexOf(r.data)<0)ds.push(r.data)});
+  ds.sort(function(a,b){return a.split("/").reverse().join("")<b.split("/").reverse().join("")?-1:1});aFill($("a_med"),ms,"Todos");aFill($("a_dt"),ds,"Todas")}
+ function aRows(){var med=$("a_med").value,dt=$("a_dt").value;return AR.filter(function(r){return (!med||aMk(r)===med)&&(!dt||r.data===dt)})}
+ function aShow(){
+  var tb=$("a_tbl"),rows=aRows(),okc=0;tb.textContent="";
+  var h=document.createElement("tr");["Avisado","Telefone","Data","Hora","Médico","Especialidade",""].forEach(function(x){var th=document.createElement("th");th.textContent=x;h.appendChild(th)});tb.appendChild(h);
+  rows.forEach(function(r){
+   var tr=document.createElement("tr"),cell=function(){var td=document.createElement("td");tr.appendChild(td);return td};
+   if(!/^\d{10,11}$/.test(r.tel)||!r.data||!r.hora)tr.className="bad";else okc++;
+   if(r.ok)tr.classList.add("done");
+   var a=document.createElement("a");a.className="wa";a.textContent="WhatsApp";a.target="_blank";a.rel="noopener";
+   var upd=function(){var l=aLink(r);if(l)a.href=l;else a.removeAttribute("href")};
+   var cb=document.createElement("input");cb.type="checkbox";cb.checked=r.ok;cb.setAttribute("aria-label","Avisado");cb.style.width="auto";cb.style.minWidth="0";
+   cb.onchange=function(){r.ok=cb.checked;tr.classList.toggle("done",r.ok)};cell().appendChild(cb);
+   ["tel","data","hora","medico","esp"].forEach(function(f){var i=document.createElement("input");i.value=f==="tel"?fmtPhone(r.tel):r[f];i.setAttribute("aria-label",f);
+    i.oninput=function(){r[f]=f==="tel"?normPhone(i.value):i.value;upd();if(f==="medico"||f==="esp"||f==="data")aFilters()};cell().appendChild(i)});
+   upd();a.onclick=function(){if(!a.getAttribute("href"))return;r.ok=true;cb.checked=true;tr.classList.add("done")};cell().appendChild(a);tb.appendChild(tr)});
+  $("a_cnt").textContent=AR.length?rows.length+" consulta(s) selecionada(s), "+okc+" com dados completos.":"Nenhuma consulta ainda."}
+ $("a_proc").onclick=function(){var t=$("a_txt").value;if(!t.trim()){$("a_msg").textContent="Cole a agenda antes de separar os dados.";return}
+  AR=aParse(t);var bad=AR.filter(function(r){return !/^\d{10,11}$/.test(r.tel)||!r.data||!r.hora}).length;
+  $("a_msg").textContent=AR.length+" consulta(s) encontrada(s), "+bad+" com dado faltando (linhas amarelas).";aFilters();aShow()};
+ $("a_ex").onclick=function(){$("a_txt").value=AEX;$("a_proc").onclick()};
+ $("a_lim").onclick=function(){$("a_txt").value="";AR=[];$("a_msg").textContent="";aFilters();aShow()};
+ $("a_med").onchange=aShow;$("a_dt").onchange=aShow;
+ $("a_tpl").oninput=function(){ls("acfg_tpl",$("a_tpl").value);aShow()};
+ $("a_cp").onclick=function(){var l=aRows().filter(function(r){return /^\d{10,11}$/.test(r.tel)}).map(function(r){return fmtPhone(r.tel)}).join("\n");
+  if(!l){$("a_msg").textContent="Nenhum telefone válido na seleção.";return}
+  try{navigator.clipboard.writeText(l).then(function(){$("a_msg").textContent="Telefones copiados."},function(){$("a_msg").textContent="Não foi possível copiar. Selecione e copie manualmente."})}catch(e){$("a_msg").textContent="Não foi possível copiar."}};
+ $("a_csv").onclick=function(){var rows=aRows();if(!rows.length){$("a_msg").textContent="Nada para baixar.";return}
+  var c="telefone;data;hora;medico;especialidade\n"+rows.map(function(r){return [fmtPhone(r.tel),r.data,r.hora,r.medico,r.esp].join(";")}).join("\n");
+  var b=new Blob(["\ufeff"+c],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="agenda.csv";document.body.appendChild(a);a.click();a.remove()};
+ aFilters();aShow();
  window.addEventListener("hashchange",route);route();applyPaper();render();route();
 })();
 </script>
